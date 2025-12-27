@@ -4,20 +4,17 @@ import { Plus, Search } from 'lucide-react';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { DashboardStats } from '@/components/admin/DashboardStats';
 import { ProductTable } from '@/components/admin/ProductTable';
-import { ProductFormDialog } from '@/components/admin/ProductFormDialog';
 import { useProducts } from '@/hooks/useProducts';
 import { useAuth } from '@/hooks/useAuth';
-import { Product, ProductFormData } from '@/types/product';
+import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 
 const Admin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const { products, addProduct, updateProduct, deleteProduct } = useProducts();
+  const { products, deleteProduct } = useProducts();
   const { user, isLoading, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -52,31 +49,13 @@ const Admin = () => {
       p.category.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleAddProduct = (data: ProductFormData) => {
-    addProduct(data);
-    toast({ title: 'Product added successfully' });
-  };
-
-  const handleEditProduct = (data: ProductFormData) => {
-    if (editingProduct) {
-      updateProduct(editingProduct.id, data);
-      toast({ title: 'Product updated successfully' });
-    }
-  };
-
   const handleDeleteProduct = (id: string) => {
     deleteProduct(id);
     toast({ title: 'Product deleted', variant: 'destructive' });
   };
 
-  const openEditDialog = (product: Product) => {
-    setEditingProduct(product);
-    setIsDialogOpen(true);
-  };
-
-  const closeDialog = () => {
-    setIsDialogOpen(false);
-    setEditingProduct(null);
+  const handleEditProduct = (product: Product) => {
+    navigate(`/admin/products/edit/${product.id}`);
   };
 
   return (
@@ -96,7 +75,7 @@ const Admin = () => {
                 <h3 className="text-xl font-semibold text-foreground mb-4">Recent Products</h3>
                 <ProductTable
                   products={products.slice(0, 5)}
-                  onEdit={openEditDialog}
+                  onEdit={handleEditProduct}
                   onDelete={handleDeleteProduct}
                 />
               </div>
@@ -110,7 +89,7 @@ const Admin = () => {
                   <h2 className="text-3xl font-bold text-foreground">Products</h2>
                   <p className="text-muted-foreground mt-1">Manage your product catalog</p>
                 </div>
-                <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
+                <Button onClick={() => navigate('/admin/products/add')} className="gap-2">
                   <Plus className="h-4 w-4" />
                   Add Product
                 </Button>
@@ -128,7 +107,7 @@ const Admin = () => {
 
               <ProductTable
                 products={filteredProducts}
-                onEdit={openEditDialog}
+                onEdit={handleEditProduct}
                 onDelete={handleDeleteProduct}
               />
             </div>
@@ -145,13 +124,6 @@ const Admin = () => {
           )}
         </div>
       </main>
-
-      <ProductFormDialog
-        open={isDialogOpen}
-        onClose={closeDialog}
-        onSubmit={editingProduct ? handleEditProduct : handleAddProduct}
-        product={editingProduct}
-      />
     </div>
   );
 };

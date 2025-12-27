@@ -1,6 +1,6 @@
 import { Package, DollarSign, TrendingUp, ShoppingCart } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
-import { Product } from '@/types/product';
+import { Product } from '@/types';
 
 interface DashboardStatsProps {
   products: Product[];
@@ -8,9 +8,17 @@ interface DashboardStatsProps {
 
 export const DashboardStats = ({ products }: DashboardStatsProps) => {
   const totalProducts = products.length;
-  const activeProducts = products.filter((p) => p.status === 'active').length;
-  const totalValue = products.reduce((sum, p) => sum + p.price * p.stock, 0);
-  const lowStock = products.filter((p) => p.stock < 10).length;
+  const activeProducts = products.filter((p) => p.published).length;
+
+  const totalValue = products.reduce((sum, p) => {
+    const productValue = p.variants?.reduce((vSum, v) => vSum + (v.price * v.stock), 0) || 0;
+    return sum + productValue;
+  }, 0);
+
+  const lowStock = products.filter((p) => {
+    const totalStock = p.variants?.reduce((sum, v) => sum + v.stock, 0) || 0;
+    return totalStock < 10;
+  }).length;
 
   const stats = [
     {

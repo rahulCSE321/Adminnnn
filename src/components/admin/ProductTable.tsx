@@ -1,5 +1,5 @@
 import { Edit, Trash2, MoreHorizontal } from 'lucide-react';
-import { Product } from '@/types/product';
+import { Product } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -23,12 +23,6 @@ interface ProductTableProps {
   onDelete: (id: string) => void;
 }
 
-const statusColors = {
-  active: 'bg-green-500/10 text-green-700 border-green-500/20',
-  draft: 'bg-yellow-500/10 text-yellow-700 border-yellow-500/20',
-  archived: 'bg-muted text-muted-foreground border-border',
-};
-
 export const ProductTable = ({ products, onEdit, onDelete }: ProductTableProps) => {
   if (products.length === 0) {
     return (
@@ -37,6 +31,18 @@ export const ProductTable = ({ products, onEdit, onDelete }: ProductTableProps) 
       </div>
     );
   }
+
+  const getPriceDisplay = (product: Product) => {
+    if (!product.variants || product.variants.length === 0) return '₹0';
+    const prices = product.variants.map(v => v.price);
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    return minPrice === maxPrice ? `₹${minPrice}` : `₹${minPrice} - ₹${maxPrice}`;
+  };
+
+  const getTotalStock = (product: Product) => {
+    return product.variants?.reduce((sum, v) => sum + (v.stock || 0), 0) || 0;
+  };
 
   return (
     <div className="rounded-lg border border-border overflow-hidden">
@@ -57,22 +63,25 @@ export const ProductTable = ({ products, onEdit, onDelete }: ProductTableProps) 
             <TableRow key={product.id} className="hover:bg-muted/30">
               <TableCell>
                 <img
-                  src={product.imageUrl || '/placeholder.svg'}
+                  src={product.images?.[0] || '/placeholder.svg'}
                   alt={product.name}
                   className="w-12 h-12 rounded-lg object-cover border border-border"
                 />
               </TableCell>
-              <TableCell className="font-medium">{product.name}</TableCell>
+              <TableCell className="font-medium">
+                <div>{product.name}</div>
+                <div className="text-xs text-muted-foreground">{product.brand}</div>
+              </TableCell>
               <TableCell className="text-muted-foreground">{product.category}</TableCell>
-              <TableCell className="text-right font-medium">${product.price.toFixed(2)}</TableCell>
+              <TableCell className="text-right font-medium">{getPriceDisplay(product)}</TableCell>
               <TableCell className="text-right">
-                <span className={product.stock < 10 ? 'text-destructive font-medium' : ''}>
-                  {product.stock}
+                <span className={getTotalStock(product) < 10 ? 'text-destructive font-medium' : ''}>
+                  {getTotalStock(product)}
                 </span>
               </TableCell>
               <TableCell>
-                <Badge variant="outline" className={statusColors[product.status]}>
-                  {product.status}
+                <Badge variant={product.published ? "default" : "secondary"} className={product.published ? "bg-green-500 hover:bg-green-600" : ""}>
+                  {product.published ? 'Published' : 'Draft'}
                 </Badge>
               </TableCell>
               <TableCell>

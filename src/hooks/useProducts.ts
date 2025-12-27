@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Product, ProductFormData } from '@/types/product';
+import { Product } from '@/types';
 
 const STORAGE_KEY = 'admin_products';
 
@@ -23,10 +23,17 @@ export const useProducts = () => {
     setIsLoading(false);
   }, []);
 
-  const addProduct = (data: ProductFormData) => {
+  const addProduct = (data: Partial<Product>) => {
     const newProduct: Product = {
-      ...data,
       id: generateId(),
+      name: data.name || '',
+      brand: data.brand || '',
+      category: data.category || '',
+      description: data.description || '',
+      disclaimer: data.disclaimer || '',
+      variants: data.variants || [],
+      images: data.images || [],
+      published: data.published ?? true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -36,7 +43,7 @@ export const useProducts = () => {
     return newProduct;
   };
 
-  const updateProduct = (id: string, data: Partial<ProductFormData>) => {
+  const updateProduct = (id: string, data: Partial<Product>) => {
     const updated = products.map((p) =>
       p.id === id ? { ...p, ...data, updatedAt: new Date().toISOString() } : p
     );
